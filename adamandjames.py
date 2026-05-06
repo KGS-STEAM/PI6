@@ -71,7 +71,60 @@ def placing(player):
     while valid_space == False:
         print("select your space must be between 1-9")
         selected_space = int(input())
-        
+        if selected_space >= 1 and selected_space <= 9:
+            position = number_to_position(selected_space)
+            checking_pixel = position[0]
+            if starting_board(checking_pixel) == b:
+                valid_space = True
+            elif starting_board(checking_pixel) == b:
+                print("That space is occupied select another.")
+position = number_to_position(selected_space)
+
+if player == red_player:
+    clr = r
+elif player == blue_player:
+    clr = bl
     
 
+starting_board.pop(position[0])
+starting_board.insert(position[0],clr)
+starting_board.pop(position[1])
+starting_board.insert(position[1],clr)
+starting_board.pop(position[2])
+starting_board.insert(position[2],clr)
+starting_board.pop(position[3])
+starting_board.insert(position[3],clr)
+
+sense.set_pixels(starting_board)
+
+winning_sets = [123,456,789,147,258,369,159,753]
+for item in winning_sets:
+    set_total = 0
+    for x in range(3):
+        position = number_to_position(int(str(item)[x]))
+        checking_pixel = position[0]
+        if starting_board(int(checking_pixel)) == clr:
+            set_total += 1
+    if set_total == 3:
+        print(player + "wins!")
+        return True
     
+draw_total = 0
+for x in range (9):
+    position = number_to_position(x+1)
+    checking_pixel = position[0]
+    if starting_board(checking_pixel) == bl or starting_board(checking_pixel) == r:
+        draw total += 1
+if draw_total == 9:
+    print("It's a draw!")
+elif draw_total != 9:
+    return False
+
+
+sense.set_pixels(starting_board)
+
+print("Input name for player 1")
+player1 = input()
+
+    
+
