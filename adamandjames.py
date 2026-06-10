@@ -1,152 +1,173 @@
-from sense_hat import SenseHat, DIRECTION_UP, DIRECTION_DOWN, DIRECTION_LEFT, DIRECTION_RIGHT, DIRECTION_MIDDLE
-from random import randint
+from sense_hat import SenseHat
+
 sense = SenseHat()
-def main():
-    win = False
-    w = (255,255,255)
-    b = (0,0,0)
-    p = (140, 0 ,255)
-    r = (255,0,0)
-    bl = (0,0,255)
-    starting_board = [
-    b,b,w,b,b,w,b,b,
-    b,b,w,b,b,w,b,b,
-    w,w,w,w,w,w,w,w,
-    b,b,w,b,b,w,b,b,
-    b,b,w,b,b,w,b,b,
-    w,w,w,w,w,w,w,w,
-    b,b,w,b,b,w,b,b,
-    b,b,w,b,b,w,b,b
-    ]
-    top_left = [0,1,8,9]
-    top_middle = [3,4,11,12]
-    top_right = [6,7,14,15]
-    middle_left = [24,25,32,33]
-    middle_middle = [27,28,35,36]
-    middle_right = [30,31,38,39]
-    bottom_left = [48,49,56,57]
-    bottom_middle = [51,52,59,60]
-    bottom_right = [54,55,62,63]
-    sense.set_pixels(starting_board)
+sense.clear()
 
-    print("Input name for player 1")
-    player1 = input()
-    print("input name for player 2")
-    player2 = input()
-    starting_player = randint(1,2)
-    if starting_player == 1:
-        print(player1 + "will start" + player1 + "will be red, and" + player2 + "will be blue.")
-        red_player = player1
-        blue_player = player2
-    elif starting_player == 1:
-        print(player2 + "will start" + player2 + "will be red, and" + player1 + "will be blue.")
-        red_player = player2
-        blue_player = player1
-    def position_2_number(position):
-        if position == top_left:
-            return 1
-        elif position == top_middle:
-            return 2
-        elif position == top_right:
-            return 3
-        elif position == middle_left:
-            return 4
-        elif position == middle_middle:
-            return 5
-        elif position == middle_right:
-            return 6
-        elif position == bottom_left:
-            return 7
-        elif position == bottom_middle:
-            return 8
-        else:
-            return 9
-    def number_to_position(placer_position):
-        if placer_position == 1:
-            return top_left
-        elif placer_position == 2:
-            return top_middle
-        elif placer_position == 3:
-            return top_right
-        elif placer_position == 4:
-            return middle_left
-        elif placer_position == 5:
-            return middle_middle
-        elif placer_position == 6:
-            return middle_right
-        elif placer_position == 7:
-            return bottom_left
-        elif placer_position == 8:
-            return bottom_middle
-        elif placer_position == 9:
-            return bottom_right
-    player = 1
-    selected_space = 0 
-    def placing(player):
-        valid_space = False
-        print(player + "'s turn")
-        while valid_space == False:
-            print("select your space must be between 1-9")
-            selected_space = int(input())
-            if selected_space >= 1 and selected_space <= 9:
-                position = number_to_position(selected_space)
-                checking_pixel = position[0]
-                if starting_board(checking_pixel) == b:
-                    valid_space = True
-                elif starting_board(checking_pixel) == b:
-                    print("That space is occupied select another.")
-    position = number_to_position(selected_space)
+# Colours
+X_COLOR = (255, 0, 0)      # Red
+O_COLOR = (0, 0, 255)      # Blue
+CURSOR  = (0, 255, 0)      # Green
 
-    if player == red_player:
-        clr = r
-    elif player == blue_player:
-        clr = bl
-        
-
-    starting_board.remove(position[0])
-    starting_board.insert(position[0],clr)
-    starting_board.pop(position[1])
-    starting_board.insert(position[1],clr)
-    starting_board.pop(position[2])
-    starting_board.insert(position[2],clr)
-    starting_board.pop(position[3])
-    starting_board.insert(position[3],clr)
-
-    sense.set_pixels(starting_board)
-
-    winning_sets = [123,456,789,147,258,369,159,753]
-    for item in winning_sets:
-        set_total = 0
-        for x in range(3):
-            position = number_to_position(int(str(item)[x]))
-            checking_pixel = position[0]
-            if starting_board(int(checking_pixel)) == clr:
-                set_total += 1
-        if set_total == 3:
-            print(player + "wins!")
-            return True
-        
-        
-    draw_total = 0
-    for x in range (9):
-        position = number_to_position(x+1)
-        checking_pixel = position[0]
-        if starting_board(checking_pixel) == bl or starting_board(checking_pixel) == r:
-            draw_total += 1
-    if draw_total == 9:
-        print("It's a draw!")
-    elif draw_total != 9:
-        return False
+EMPTY   = (0, 0, 0)        # Black
 
 
-    
-        
-    while win == False:
-        win = placing(red_player)
-        if win == True:
-            break
-        win = placing(blue_player)
-        if win == True:
-            break
-        
-main()
+# 3×3 board stored as characters
+board = [[" ", " ", " "],
+         [" ", " ", " "],
+         [" ", " ", " "]]
+
+cursor_r = 1
+cursor_c = 1
+player = "X"
+
+def draw_board():
+    pixels = [EMPTY] * 64
+
+    # draw pieces
+    for r in range(3):
+        for c in range(3):
+            idx = r * 8 + c
+            if board[r][c] == "X":
+                pixels[idx] = X_COLOR
+            elif board[r][c] == "O":
+                pixels[idx] = O_COLOR
+
+    # draw cursor
+    cursor_idx = cursor_r * 8 + cursor_c
+    pixels[cursor_idx] = CURSOR
+
+    sense.set_pixels(pixels)
+
+def check_winner():
+    # rows
+    for r in range(3):
+        if board[r][0] == board[r][1] == board[r][2] != " ":
+            return board[r][0]
+
+    # columns
+    for c in range(3):
+        if board[0][c] == board[1][c] == board[2][c] != " ":
+            return board[0][c]
+
+    # diagonals
+    if board[0][0] == board[1][1] == board[2][2] != " ":
+        return board[0][0]
+    if board[0][2] == board[1][1] == board[2][0] != " ":
+        return board[0][2]
+
+    return None
+
+def full():
+    for r in range(3):
+        for c in range(3):
+            if board[r][c] == " ":
+                return False
+    return True
+
+def reset():
+    global board, cursor_r, cursor_c, player
+    board = [[" ", " ", " "],
+             [" ", " ", " "],
+             [" ", " ", " "]]
+    cursor_r = 1
+    cursor_c = 1
+    player = "X"
+    sense.clear()
+
+# MAIN LOOP
+while True:
+    draw_board()
+    event = sense.stick.wait_for_event()
+
+    if event.action == "pressed":
+
+        # move cursor
+        if event.direction == "up":
+            cursor_r = (cursor_r - 1) % 3
+        elif event.direction == "down":
+            cursor_r = (cursor_r + 1) % 3
+        elif event.direction == "left":
+            cursor_c = (cursor_c - 1) % 3
+        elif event.direction == "right":
+            cursor_c = (cursor_c + 1) % 3
+
+        # place X or O
+        elif event.direction == "middle":
+            if board[cursor_r][cursor_c] == " ":
+                board[cursor_r][cursor_c] = player
+
+                winner = check_winner()
+                if winner:
+                    draw_board()
+                    sense.show_message(f"{winner} wins!", scroll_speed=0.05)
+                    sense.show_message("Press to restart", scroll_speed=0.05)
+                    sense.stick.wait_for_event()
+                    reset()
+                    continue
+
+                if full():
+                    draw_board()
+                    sense.show_message("Draw!", scroll_speed=0.05)
+                    sense.show_message("Press to restart", scroll_speed=0.05)
+                    sense.stick.wait_for_event()
+                    reset()
+                    continue
+
+                # switch player
+               
+               
+
+
+player = "O" if player == "X" else "X"
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
